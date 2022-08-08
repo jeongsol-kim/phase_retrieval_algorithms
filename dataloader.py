@@ -5,7 +5,7 @@ from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 from torchvision import transforms
 
-class CustomDataset(VisionDataset):
+class PNGDataset(VisionDataset):
     def __init__(self, root: str, train:bool, transform):
         super().__init__(root=root)
         self.transform = transform
@@ -24,9 +24,9 @@ class CustomDataset(VisionDataset):
 
         return image
 
-def get_valid_loader(root, batch_size):
+def get_valid_png_loader(root, batch_size):
     transform = transforms.Compose([
                 transforms.ToTensor()])
-    dataset = CustomDataset(root, False, transform)
+    dataset = PNGDataset(root, False, transform)
     data_loader = DataLoader(dataset, batch_size)
     return data_loader
