@@ -29,6 +29,11 @@ def hybrid_input_and_output_algorithm():
 # =================
 # Helper functions
 # =================
+
+#TODO: function that generate support
+#TODO: determine 1) algorithm get support and amplitude 2) algorithm only get amplitude
+#TODO: ER algorithm. support constraint and non-negative constraint.
+
 def generate_random_phase(shape: Tuple[int, int]) -> torch.Tensor:
     '''Generate randomized phase [-pi, pi] of given shape.'''
     # TODO: check if uniform distribution is correct.
