@@ -1,4 +1,5 @@
 from typing import Tuple
+import numpy as np
 import torch
 
 __ALGORITHMS__ = {}
@@ -30,7 +31,10 @@ def hybrid_input_and_output_algorithm():
 # =================
 def generate_random_phase(shape: Tuple[int, int]) -> torch.Tensor:
     '''Generate randomized phase [-pi, pi] of given shape.'''
-    pass
+    # TODO: check if uniform distribution is correct.
+    random_uniform = torch.rand(shape)  # [0, 1)
+    random_phase = (random_uniform - 0.5) * 2. * np.pi
+    return random_phase
 
 def substitute_amplitude(complex_obj: torch.Tensor, measured_amplitude: torch.Tensor) -> torch.Tensor:
     """Substitute amplitude of complex object with measured ampiltude.
