@@ -4,10 +4,10 @@ from algorithms import generate_random_phase, generate_support, substitute_ampli
 
 
 def test_generate_random_phase_scale():
-    shape = (128, 128)
+    shape = (3, 128, 128)
     amplitude = torch.ones(shape)
     support = torch.zeros(shape)
-    support[32:96, 32:96] = 1
+    support[:, 32:96, 32:96] = 1
 
     for _ in range(10):
         random_phase = generate_random_phase(amplitude, support)
@@ -16,23 +16,22 @@ def test_generate_random_phase_scale():
         assert min_phase.numpy() >= -np.pi and max_phase.numpy() <= np.pi
 
 def test_generate_random_phase_shape():
-    shape = (128, 128)
+    shape = (3, 128, 128)
     amplitude = torch.ones(shape)
     support = torch.zeros(shape)
-    support[32:96, 32:96] = 1
+    support[:, 32:96, 32:96] = 1
     random_phase = generate_random_phase(amplitude, support)
     assert random_phase.shape == shape
 
 def test_generate_support_shape():
-    dummy = torch.zeros((1, 128, 128))
+    dummy = torch.zeros((3, 128, 128))
     padded_dummy, support = generate_support(dummy)
     assert padded_dummy.shape == support.shape
-    assert dummy.shape * 2 == support.shape
 
 def test_generate_support_value():
-    dummy = torch.rand((1, 128, 128))
+    dummy = torch.ones((3, 128, 128))
     padded_dummy, support = generate_support(dummy)
-    assert support.sum() == 128 * 128
+    assert support.sum() == 3 * 128 * 128
     assert padded_dummy.sum() == dummy.sum()
 
 def test_substitute_amplitude():
