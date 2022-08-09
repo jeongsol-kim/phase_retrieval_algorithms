@@ -23,12 +23,14 @@ def main():
     algorithm = get_algorithm(args.algorithm)
 
     with torch.no_grad():
-        amplitude = next(iter(loader)).to(device)
+        image, amplitude = next(iter(loader))
+        image = image.to(device)
+        amplitude = amplitude.to(device)
         recon = algorithm(amplitude, args.num_iterations)
         raw_input = ifft2d(amplitude)
         
     os.makedirs('results/', exist_ok=True)
-    result = torch.cat([raw_input.abs(), normalize(recon.abs())])
+    result = torch.cat([image, raw_input.abs(), normalize(recon.abs())])
     save_image(result, 'results/test.png')
 
 if __name__ == "__main__":
