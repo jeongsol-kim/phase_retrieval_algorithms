@@ -16,6 +16,15 @@ def ifft2d(tensor: torch.Tensor) -> torch.Tensor:
     return ifft2(tensor)
 
 
+def split_amplitude_phase(complex_obj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    amplitude = complex_obj.abs()
+    phase = complex_obj.angle()
+    return amplitude, phase
+
+def combine_amplitude_phase(amplitude: torch.Tensor, phase: torch.Tensor):
+    complex_obj = torch.polar(amplitude, phase)
+    return complex_obj
+
 def zero_padding_twice(tensor: torch.Tensor) -> torch.Tensor:
     if tensor.ndim not in [3, 4]:
         raise ValueError(f"Expected dimension of input (B, C, H, W) or (C, H, W),\
