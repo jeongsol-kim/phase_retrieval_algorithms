@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import pytest
 
-from utils import calculate_half_padding, combine_amplitude_phase, fft2d, ifft2d, split_amplitude_phase, zero_padding_twice
+from utils import calculate_half_padding, combine_amplitude_phase, crop_center_half, fft2d, ifft2d, split_amplitude_phase, zero_padding_twice
 
 def test_fft2d_shape():
     dummy = torch.ones((1, 3, 256, 256))
@@ -97,5 +97,13 @@ def test_calculate_half_padding_odd_case():
     padding = calculate_half_padding(height, width)
     assert padding == (16, 16, 15, 16)
 
+def test_crop_center_half_shape_even_case():
+    dummy = torch.ones((1, 3, 128, 128))
+    cropped_dummy = crop_center_half(dummy)
+    assert cropped_dummy.shape == (1, 3, 64, 64)
 
+def test_crop_center_half_shape_odd_case():
+    dummy = torch.ones((1, 3, 64, 62))
+    cropped_dummy = crop_center_half(dummy)
+    assert cropped_dummy.shape == (1, 3, 32, 31)
 

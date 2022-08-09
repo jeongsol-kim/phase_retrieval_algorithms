@@ -1,5 +1,6 @@
 from typing import Tuple
 import torch
+from torch.nn import functional as F
 from torch.fft import fft2, ifft2
 
 def fft2d(tensor: torch.Tensor) -> torch.Tensor:
@@ -32,9 +33,9 @@ def zero_padding_twice(tensor: torch.Tensor) -> torch.Tensor:
     
     height, width = tensor.shape[-2], tensor.shape[-1]
     padding = calculate_half_padding(height, width)
-    padding_layer = torch.nn.ZeroPad2d(padding)
-
-    return padding_layer(tensor)
+    # padding_layer = torch.nn.ZeroPad2d(padding)
+    # return padding_layer(tensor)
+    return F.pad(tensor, padding, 'constant', 0)
 
 def calculate_half_padding(height: int, width: int) -> Tuple[int, int, int, int]:
     """Calculate half size padding given height and width.
@@ -56,6 +57,10 @@ def calculate_half_padding(height: int, width: int) -> Tuple[int, int, int, int]
 
     return (pad_left, pad_right, pad_top, pad_bottom)
 
+def crop_center_half(tensor: torch.Tensor) -> torch.Tensor:
+    height, width = tensor.shape[-2], tensor.shape[-1]
+    padding = calculate_half_padding(height//2, width//2)
+    return tensor[..., padding[2]:-padding[3], padding[0]:-padding[1]]
 
 
 
