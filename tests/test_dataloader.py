@@ -30,7 +30,7 @@ def test_amplitude_loader_data_shape():
     batch_size = 2
 
     loader = get_valid_loader('amplitude_dataset', root, batch_size)
-    image = next(iter(loader))
+    image, _ = next(iter(loader))
     assert image.shape == (batch_size, 3, 256, 256)
 
 
@@ -39,5 +39,6 @@ def test_amplitude_loader_data_type():
     batch_size = 1
 
     loader = get_valid_loader('amplitude_dataset', root, batch_size)
-    image = next(iter(loader))
+    image, amplitude = next(iter(loader))
     assert image.dtype == torch.float32
+    assert amplitude.dtype == torch.float32
