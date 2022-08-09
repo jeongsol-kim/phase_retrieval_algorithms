@@ -41,7 +41,7 @@ def error_reduction_algorithm(amplitude: torch.Tensor, iteration: int):
 
 
 @register_algorithm(name='HIO')
-def hybrid_input_and_output_algorithm(amplitude: torch.Tensor, iteration: int, start_domain: str = 'fourier'):
+def hybrid_input_and_output_algorithm(amplitude: torch.Tensor, iteration: int):
     padded_amplitude, support = generate_support(amplitude)
     init_phase = generate_random_phase(padded_amplitude, support)
 
