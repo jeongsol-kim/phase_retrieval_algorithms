@@ -62,8 +62,10 @@ def crop_center_half(tensor: torch.Tensor) -> torch.Tensor:
     padding = calculate_half_padding(height//2, width//2)
     return tensor[..., padding[2]:-padding[3], padding[0]:-padding[1]]
 
-
-
-
-
+def normalize(tensor: torch.Tensor) -> torch.Tensor:
+    max_pixels = tensor.max(dim=-2, keepdim=True)[0]
+    max_pixels = max_pixels.max(dim=-1, keepdim=True)[0]
+    min_pixels = tensor.min(dim=-2, keepdim=True)[0]
+    min_pixels = min_pixels.min(dim=-1, keepdim=True)[0]
+    return (tensor-min_pixels) / (max_pixels-min_pixels)
 

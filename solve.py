@@ -5,6 +5,7 @@ from torchvision.utils import save_image
 
 from dataloader import get_valid_loader
 from algorithms import get_algorithm
+from utils import ifft2d, normalize
 
 
 def main():
@@ -24,11 +25,10 @@ def main():
     with torch.no_grad():
         amplitude = next(iter(loader)).to(device)
         recon = algorithm(amplitude, args.num_iterations)
-
-    print(amplitude.shape, recon.shape)
-
+        raw_input = ifft2d(amplitude)
+        
     os.makedirs('results/', exist_ok=True)
-    result = torch.cat([amplitude, recon.abs()])
+    result = torch.cat([raw_input.abs(), normalize(recon.abs())])
     save_image(result, 'results/test.png')
 
 if __name__ == "__main__":
