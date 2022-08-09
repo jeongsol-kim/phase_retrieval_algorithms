@@ -36,15 +36,29 @@ def error_reduction_algorithm(amplitude: torch.Tensor, iteration: int):
         fft_obj = apply_fourier_constraint(fft_obj, padded_amplitude)
         obj = utils.ifft2d(fft_obj)
 
-    
     reconstructed = utils.crop_center_half(obj)
     return reconstructed
 
 
 @register_algorithm(name='HIO')
 def hybrid_input_and_output_algorithm(amplitude: torch.Tensor, iteration: int, start_domain: str = 'fourier'):
-    pass
+    padded_amplitude, support = generate_support(amplitude)
+    init_phase = generate_random_phase(padded_amplitude, support)
 
+    fft_obj = utils.combine_amplitude_phase(padded_amplitude, init_phase)
+    obj = utils.ifft2d(fft_obj)
+    obj_prime = obj
+    pbar = tqdm(range(iteration), miniters=100)
+
+    for i in pbar:
+        pbar.set_description(f"Iteration {i+1}", refresh=False)
+        obj = apply_image_constraint_hio(obj_prime, obj, support)
+        fft_obj = utils.fft2d(obj)
+        fft_obj = apply_fourier_constraint(fft_obj, padded_amplitude)
+        obj_prime= utils.ifft2d(fft_obj)
+
+    reconstructed = utils.crop_center_half(obj_prime)
+    return reconstructed
 
 # =================
 # Helper functions
@@ -69,8 +83,10 @@ def apply_image_constraint(obj, support):
     obj = obj * support
     return obj
 
-def apply_image_constraint_hio(obj, support):
-    pass
+def apply_image_constraint_hio(obj, obj_prime, support, beta=0.9):
+    in_support = obj_prime * support
+    out_support = (obj - beta * obj_prime) * (1-support)
+    return in_support + out_support
 
 def apply_fourier_constraint(fft_obj, measured_amplitude):
     substituted_obj = substitute_amplitude(fft_obj, measured_amplitude)
