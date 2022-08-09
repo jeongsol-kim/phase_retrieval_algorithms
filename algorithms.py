@@ -67,7 +67,7 @@ def hybrid_input_and_output_algorithm(amplitude: torch.Tensor, iteration: int, s
 #TODO: ER algorithm. support constraint and non-negative constraint.
 
 def generate_random_phase(padded_amplitude: torch.Tensor, support: torch.Tensor) -> torch.Tensor:
-    random_uniform = torch.rand(padded_amplitude.shape)
+    random_uniform = torch.rand(padded_amplitude.shape).to(support.device)
     random_phase = random_uniform * support
     return random_phase
 
@@ -75,7 +75,7 @@ def generate_random_phase(padded_amplitude: torch.Tensor, support: torch.Tensor)
 def generate_support(amplitude: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
     padded_amplitude = utils.zero_padding_twice(amplitude)
     support_ones = torch.ones_like(amplitude)
-    support = utils.zero_padding_twice(support_ones)
+    support = utils.zero_padding_twice(support_ones).to(padded_amplitude.device)
     return padded_amplitude, support
 
 

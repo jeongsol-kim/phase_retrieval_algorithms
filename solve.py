@@ -13,13 +13,17 @@ def main():
     parser.add_argument('--num_iterations', type=int, default=2000)
     parser.add_argument('--data_root', type=str, default='/data/FFHQ/')
     parser.add_argument('--batch_size', type=int, default=1)
+    parser.add_argument('--gpu', type=int, default=0)
     args = parser.parse_args()
+
+    device = torch.device(f'cuda:{args.gpu}') if torch.cuda.is_available() else torch.device('cpu')
 
     loader = get_valid_loader('amplitude_dataset', root=args.data_root, batch_size=args.batch_size)
     algorithm = get_algorithm(args.algorithm)
 
-    amplitude = next(iter(loader))
-    recon = algorithm(amplitude, args.num_iterations)
+    with torch.no_grad():
+        amplitude = next(iter(loader)).to(device)
+        recon = algorithm(amplitude, args.num_iterations)
 
     print(amplitude.shape, recon.shape)
 
