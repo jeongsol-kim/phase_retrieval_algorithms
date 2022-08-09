@@ -59,5 +59,5 @@ class AmplitudeDataset(PNGDataset):
 
         fft_image = fft2d(image)
         amplitude = fft_image.abs()
-        return amplitude
+        return image, amplitude
 
