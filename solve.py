@@ -22,16 +22,15 @@ def main():
     loader = get_valid_loader('amplitude_dataset', root=args.data_root, batch_size=args.batch_size)
     algorithm = get_algorithm(args.algorithm)
 
-    with torch.no_grad():
-        image, amplitude = next(iter(loader))
-        image = image.to(device)
-        amplitude = amplitude.to(device)
-        recon = algorithm(amplitude, args.num_iterations)
-        raw_input = ifft2d(amplitude)
-        
     os.makedirs('results/', exist_ok=True)
-    result = torch.cat([image, raw_input.abs(), normalize(recon.abs())])
-    save_image(result, 'results/test.png')
+
+    with torch.no_grad():
+        for i, (image, amplitude) in enumerate(loader):
+            image = image.to(device)
+            amplitude = amplitude.to(device)
+            recon = algorithm(amplitude, args.num_iterations)
+        
+            save_image(normalize(recon.abs()), f'results/recon_{i}.png')
 
 if __name__ == "__main__":
     main()

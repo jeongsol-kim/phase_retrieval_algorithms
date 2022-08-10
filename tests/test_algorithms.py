@@ -25,14 +25,13 @@ def test_generate_random_phase_shape():
 
 def test_generate_support_shape():
     dummy = torch.zeros((3, 128, 128))
-    padded_dummy, support = generate_support(dummy)
-    assert padded_dummy.shape == support.shape
+    support = generate_support(dummy)
+    assert dummy.shape == support.shape
 
 def test_generate_support_value():
     dummy = torch.ones((3, 128, 128))
-    padded_dummy, support = generate_support(dummy)
+    support = generate_support(dummy)
     assert support.sum() == 3 * 128 * 128
-    assert padded_dummy.sum() == dummy.sum()
 
 def test_substitute_amplitude():
     init_amp = torch.ones((128, 128))
