@@ -22,15 +22,17 @@ def main():
     loader = get_valid_loader('amplitude_dataset', root=args.data_root, batch_size=args.batch_size)
     algorithm = get_algorithm(args.algorithm)
 
-    os.makedirs('results/', exist_ok=True)
+    save_dir = f'results/{args.algorithm}/'
+    os.makedirs(save_dir, exist_ok=True)
 
     with torch.no_grad():
         for i, (image, amplitude) in enumerate(loader):
+            print(f">> Phase retrieval for {i}-th image.")
             image = image.to(device)
             amplitude = amplitude.to(device)
             recon = algorithm(amplitude, args.num_iterations)
         
-            save_image(normalize(recon.abs()), f'results/recon_{i}.png')
+            save_image(normalize(recon.abs()), os.path.join(save_dir, f"recon_{i}.png"))
 
 if __name__ == "__main__":
     main()
