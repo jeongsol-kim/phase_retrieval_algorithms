@@ -21,44 +21,37 @@ def get_algorithm(name: str) -> Callable:
 
 @register_algorithm(name='ER')
 def error_reduction_algorithm(amplitude: torch.Tensor, iteration: int):
-    padded_amplitude, support = generate_support(amplitude)
-    init_phase = generate_random_phase(padded_amplitude, support)
-
-    fft_obj = utils.combine_amplitude_phase(padded_amplitude, init_phase)
-    obj = utils.ifft2d(fft_obj)
+    g = torch.rand(utils.fft2d(amplitude).shape).to(amplitude.device)
 
     pbar = tqdm(range(iteration), miniters=100)
-
     for i in pbar:
+        G = utils.fft2d(g)
+        G_prime = apply_fourier_constraint(G, amplitude)
+        g_prime = utils.ifft2d(G_prime)
+        g = apply_image_constraint(g_prime)
+
+        loss = ((G.abs() - amplitude) ** 2).sum() ** 0.5
         pbar.set_description(f"Iteration {i+1}", refresh=False)
-        obj = apply_image_constraint(obj, support)
-        fft_obj = utils.fft2d(obj)
-        fft_obj = apply_fourier_constraint(fft_obj, padded_amplitude)
-        obj = utils.ifft2d(fft_obj)
+        pbar.set_postfix({'MSE': loss.item()}, refresh=False)
 
-    reconstructed = utils.crop_center_half(obj)
-    return reconstructed
+    return g
 
+@register_algorithm(name="HIO")
+def hybrid_input_output_algorithm(amplitude, iteration):
+    g = torch.rand(utils.fft2d(amplitude).shape).to(amplitude.device)
 
-@register_algorithm(name='HIO')
-def hybrid_input_and_output_algorithm(amplitude: torch.Tensor, iteration: int):
-    padded_amplitude, support = generate_support(amplitude)
-    init_phase = generate_random_phase(padded_amplitude, support)
-
-    fft_obj = utils.combine_amplitude_phase(padded_amplitude, init_phase)
-    obj = utils.ifft2d(fft_obj)
-    obj_prime = obj
     pbar = tqdm(range(iteration), miniters=100)
-
     for i in pbar:
-        pbar.set_description(f"Iteration {i+1}", refresh=False)
-        obj = apply_image_constraint_hio(obj_prime, obj, support)
-        fft_obj = utils.fft2d(obj)
-        fft_obj = apply_fourier_constraint(fft_obj, padded_amplitude)
-        obj_prime= utils.ifft2d(fft_obj)
+        G = utils.fft2d(g)
+        G_prime = apply_fourier_constraint(G, amplitude)
+        g_prime = utils.ifft2d(G_prime)
+        g = apply_image_constraint_hio(g, g_prime)
 
-    reconstructed = utils.crop_center_half(obj_prime)
-    return reconstructed
+        loss = ((G.abs() - amplitude) ** 2).sum() ** 0.5
+        pbar.set_description(f"Iteration {i+1}", refresh=False)
+        pbar.set_postfix({'MSE': loss.item()}, refresh=False)
+
+    return g
 
 # =================
 # Helper functions
@@ -71,22 +64,25 @@ def generate_random_phase(padded_amplitude: torch.Tensor, support: torch.Tensor)
     random_phase = random_uniform * support
     return random_phase
 
-
-def generate_support(amplitude: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
-    padded_amplitude = utils.zero_padding_twice(amplitude)
-    support_ones = torch.ones_like(amplitude)
-    support = utils.zero_padding_twice(support_ones).to(padded_amplitude.device)
-    return padded_amplitude, support
-
-
-def apply_image_constraint(obj, support):
+def apply_image_constraint(obj):
+    support = generate_support(obj)
     obj = obj * support
     return obj
 
-def apply_image_constraint_hio(obj, obj_prime, support, beta=0.9):
+def apply_image_constraint_hio(obj, obj_prime, beta=0.9):
+    support = generate_support(obj)
     in_support = obj_prime * support
     out_support = (obj - beta * obj_prime) * (1-support)
     return in_support + out_support
+
+def generate_support(obj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+    support = torch.ones_like(obj)
+    if obj.dtype == torch.complex64:
+        support[torch.real(obj) < 0] = 0
+    else:
+        support[obj < 0 ] = 0
+
+    return support
 
 def apply_fourier_constraint(fft_obj, measured_amplitude):
     substituted_obj = substitute_amplitude(fft_obj, measured_amplitude)
