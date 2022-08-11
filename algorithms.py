@@ -83,7 +83,7 @@ def generate_non_negative_support(obj: torch.Tensor) -> torch.Tensor:
     else:
         nn_support[obj < 0 ] = 0
 
-    return nn_support
+    return nn_support.to(obj.device)
 
 def apply_fourier_constraint(fft_obj, measured_amplitude):
     substituted_obj = substitute_amplitude(fft_obj, measured_amplitude)
