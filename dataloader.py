@@ -1,3 +1,4 @@
+from typing import Optional, Callable
 import os
 from glob import glob
 from PIL import Image
@@ -25,10 +26,10 @@ def get_dataset(name: str):
     return __DATASETS__[name]
 
 
-def get_valid_loader(dataset_name: str, root: str, batch_size: int):
+def get_valid_loader(dataset_name: str, root: str, batch_size: int, **kwargs):
     transform = transforms.Compose([
                 transforms.ToTensor()])
-    dataset = get_dataset(dataset_name)(root, False, transform)
+    dataset = get_dataset(dataset_name)(root, False, transform=transform, **kwargs)
     data_loader = DataLoader(dataset, batch_size)
     return data_loader
 
@@ -67,3 +68,25 @@ class AmplitudeDataset(PNGDataset):
 
         return image, amplitude, support
 
+@register_dataset(name='noise_amplitude_dataset')
+class NoiseAmplitudeDataset(PNGDataset):
+    def __init__(self, root: str, train: bool, sigma:float, transform:Optional[Callable]=None):
+        super().__init__(root, train, transform)
+        self.sigma = sigma
+
+    def __getitem__(self, index):
+        image = super().__getitem__(index)
+
+        # add gaussian noise
+        noise = torch.rand(image.shape) * self.sigma
+        noisy_image = torch.clip(image+noise, 0.0, 1.0)
+
+        # prepare support
+        support = torch.ones_like(noisy_image)
+        noisy_image = zero_padding_twice(noisy_image)
+        support = zero_padding_twice(support)
+
+        fft_image = fft2d(noisy_image)
+        amplitude = fft_image.abs()
+
+        return noisy_image, amplitude, support
