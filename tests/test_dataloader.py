@@ -30,15 +30,23 @@ def test_amplitude_loader_data_shape():
     batch_size = 2
 
     loader = get_valid_loader('amplitude_dataset', root, batch_size)
-    image, _ = next(iter(loader))
-    assert image.shape == (batch_size, 3, 256, 256)
+    image, _, _ = next(iter(loader))
+    assert image.shape == (batch_size, 3, 512, 512)
 
+def test_amplitude_loader_support_value():
+    root = '/data/FFHQ/'
+    batch_size = 2
+
+    loader = get_valid_loader('amplitude_dataset', root, batch_size)
+    _, _, support = next(iter(loader))
+    assert support.sum() == batch_size*3*256*256
 
 def test_amplitude_loader_data_type():
     root = '/data/FFHQ/'
     batch_size = 1
 
     loader = get_valid_loader('amplitude_dataset', root, batch_size)
-    image, amplitude = next(iter(loader))
+    image, amplitude, support = next(iter(loader))
     assert image.dtype == torch.float32
     assert amplitude.dtype == torch.float32
+    assert support.dtype == torch.float32
