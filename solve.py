@@ -32,8 +32,11 @@ def main():
             amplitude = amplitude.to(device)
             support = support.to(device)
             recon = algorithm(amplitude, support, args.num_iterations)
-            recon = crop_center_half(recon) 
-            save_image(normalize(recon.abs()), os.path.join(save_dir, f"recon_{i}.png"))
+            recon = crop_center_half(recon)
+
+            raw_input = torch.real(crop_center_half(ifft2d(amplitude)))
+            result = torch.cat([crop_center_half(image), normalize(raw_input), normalize(recon)])
+            save_image(normalize(recon), os.path.join(save_dir, f"recon_{i}.png"))
 
 if __name__ == "__main__":
     main()
