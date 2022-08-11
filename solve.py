@@ -19,7 +19,11 @@ def main():
 
     device = torch.device(f'cuda:{args.gpu}') if torch.cuda.is_available() else torch.device('cpu')
 
-    loader = get_valid_loader('amplitude_dataset', root=args.data_root, batch_size=args.batch_size)
+    loader = get_valid_loader('noise_amplitude_dataset', 
+                              root=args.data_root,
+                              batch_size=args.batch_size,
+                              sigma=0.05)
+
     algorithm = get_algorithm(args.algorithm)
 
     save_dir = f'results/{args.algorithm}/'
