@@ -1,20 +1,20 @@
 from typing import Tuple
 import torch
 from torch.nn import functional as F
-from torch.fft import fft2, ifft2
+from torch.fft import fft2, ifft2, fftn, ifftn
 
 def fft2d(tensor: torch.Tensor) -> torch.Tensor:
     if tensor.ndim not in [3, 4]:
         raise ValueError(f"Expected dimension of input (B, C, H, W) or (C, H, W),\
                            but get {tensor.ndim}-D input.")
-    return fft2(tensor)
+    return fftn(tensor, dim=(-2, -1))
 
 
 def ifft2d(tensor: torch.Tensor) -> torch.Tensor:
     if tensor.ndim not in [3, 4]:
         raise ValueError(f"Expected dimension of input (B, C, H, W) or (C, H, W),\
                            but get {tensor.ndim}-D input.")
-    return ifft2(tensor)
+    return ifftn(tensor, dim=(-2, -1))
 
 
 def split_amplitude_phase(complex_obj: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
