@@ -40,10 +40,11 @@ def error_reduction_algorithm(amplitude: torch.Tensor, support: torch.Tensor, it
         pbar.set_postfix({'MSE': loss.item()}, refresh=False)
     
     g = torch.real(utils.ifft2d(G))
-    return g
+    final_loss = mse_loss(G.abs(), amplitude)
+    return g, final_loss
 
 @register_algorithm(name="HIO")
-def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration):
+def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
 
     # initial guess
     random_phase = torch.rand(amplitude.shape).to(amplitude.device)
@@ -62,8 +63,8 @@ def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor
         pbar.set_description(f"Iteration {i+1}", refresh=False)
         pbar.set_postfix({'MSE': loss.item()}, refresh=False)
 
-    g = torch.real(utils.ifft2d(G))
-    return g
+    final_loss = mse_loss(G.abs(), amplitude)
+    return g, final_loss
 
 # =================
 # Helper functions
