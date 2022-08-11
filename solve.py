@@ -5,7 +5,7 @@ from torchvision.utils import save_image
 
 from dataloader import get_valid_loader
 from algorithms import get_algorithm
-from utils import ifft2d, normalize
+from utils import crop_center_half, ifft2d, normalize
 
 
 def main():
@@ -26,12 +26,13 @@ def main():
     os.makedirs(save_dir, exist_ok=True)
 
     with torch.no_grad():
-        for i, (image, amplitude) in enumerate(loader):
+        for i, (image, amplitude, support) in enumerate(loader):
             print(f">> Phase retrieval for {i}-th image.")
             image = image.to(device)
             amplitude = amplitude.to(device)
-            recon = algorithm(amplitude, args.num_iterations)
-        
+            support = support.to(device)
+            recon = algorithm(amplitude, support, args.num_iterations)
+            recon = crop_center_half(recon) 
             save_image(normalize(recon.abs()), os.path.join(save_dir, f"recon_{i}.png"))
 
 if __name__ == "__main__":
