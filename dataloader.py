@@ -77,16 +77,15 @@ class NoiseAmplitudeDataset(PNGDataset):
     def __getitem__(self, index):
         image = super().__getitem__(index)
 
-        # add gaussian noise
-        noise = torch.rand(image.shape) * self.sigma
-        noisy_image = torch.clip(image+noise, 0.0, 1.0)
-
         # prepare support
-        support = torch.ones_like(noisy_image)
-        noisy_image = zero_padding_twice(noisy_image)
+        support = torch.ones_like(image)
+        image = zero_padding_twice(image)
         support = zero_padding_twice(support)
 
-        fft_image = fft2d(noisy_image)
+        fft_image = fft2d(image)
         amplitude = fft_image.abs()
 
-        return noisy_image, amplitude, support
+        noise = torch.rand(amplitude.shape) * self.sigma
+        amplitude += noise
+
+        return image, amplitude, support
