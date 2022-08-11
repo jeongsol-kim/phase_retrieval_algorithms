@@ -1,6 +1,6 @@
 import numpy as np
 import torch
-from algorithms import generate_random_phase, generate_support, substitute_amplitude
+from algorithms import generate_random_phase, generate_non_negative_support, substitute_amplitude
 
 
 def test_generate_random_phase_scale():
@@ -23,14 +23,14 @@ def test_generate_random_phase_shape():
     random_phase = generate_random_phase(amplitude, support)
     assert random_phase.shape == shape
 
-def test_generate_support_shape():
+def test_generate_non_negative_support_shape():
     dummy = torch.zeros((3, 128, 128))
-    support = generate_support(dummy)
+    support = generate_non_negative_support(dummy)
     assert dummy.shape == support.shape
 
-def test_generate_support_value():
+def test_generate_non_negative_support_value():
     dummy = torch.ones((3, 128, 128))
-    support = generate_support(dummy)
+    support =generate_non_negative_support(dummy)
     assert support.sum() == 3 * 128 * 128
 
 def test_substitute_amplitude():
