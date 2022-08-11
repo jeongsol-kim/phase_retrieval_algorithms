@@ -1,11 +1,12 @@
 import os
 from glob import glob
 from PIL import Image
+import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import VisionDataset
 from torchvision import transforms
 
-from utils import fft2d
+from utils import fft2d, zero_padding_twice
 
 __DATASETS__ = {}
 
@@ -56,8 +57,13 @@ class PNGDataset(VisionDataset):
 class AmplitudeDataset(PNGDataset):
     def __getitem__(self, index):
         image = super().__getitem__(index)
-
+        
+        support = torch.ones_like(image)
+        image = zero_padding_twice(image)
+        support = zero_padding_twice(support)
+        
         fft_image = fft2d(image)
         amplitude = fft_image.abs()
-        return image, amplitude
+
+        return image, amplitude, support
 
