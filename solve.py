@@ -12,7 +12,10 @@ from utils import crop_center_half, ifft2d, normalize
 
 def set_logger(log_path: str):
     logger = logging.getLogger()
-    formatter = logging.Formatter('%(asctime)s - %(message)s')
+    
+    logger.setLevel(logging.INFO)
+    
+    formatter = logging.Formatter('%(asctime)s >> %(message)s')
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
     logger.addHandler(stream_handler)
@@ -65,6 +68,9 @@ def run(algorithm, dataloader, args):
                     best_recon.update({'recon': recon, 'loss':loss})
 
             average_time = average_time / args.num_repeats
+
+            logger.info(f"Best loss: {round(best_recon['loss'].item(), 3)}")
+            logger.info(f"Average time: {average_time}")
 
             recon = crop_center_half(best_recon['recon'])
             measurement_image = torch.real(crop_center_half(ifft2d(amplitude)))
