@@ -46,7 +46,7 @@ def run(algorithm, dataloader, args):
     # RUN
     with torch.no_grad():
         for i, (image, amplitude, support) in enumerate(dataloader):
-            logger.info(">> Phase retrieval for %d-th image.", i)
+            logger.info("Phase retrieval for %d-th image.", i)
 
             image = image.to(device)
             amplitude = amplitude.to(device)
@@ -56,7 +56,7 @@ def run(algorithm, dataloader, args):
             average_time = 0
             
             for n in range(args.num_repeats):
-                logger.info(">> Repeat Time %d.", n+1)
+                logger.info("Repeat Time %d.", n+1)
 
                 start_time = time.time()
                 recon, loss = algorithm(amplitude, support, args.num_iterations)
