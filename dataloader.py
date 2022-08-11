@@ -69,21 +69,13 @@ class AmplitudeDataset(PNGDataset):
         return image, amplitude, support
 
 @register_dataset(name='noise_amplitude_dataset')
-class NoiseAmplitudeDataset(PNGDataset):
+class NoiseAmplitudeDataset(AmplitudeDataset):
     def __init__(self, root: str, train: bool, sigma:float, transform:Optional[Callable]=None):
         super().__init__(root, train, transform)
         self.sigma = sigma
 
     def __getitem__(self, index):
-        image = super().__getitem__(index)
-
-        # prepare support
-        support = torch.ones_like(image)
-        image = zero_padding_twice(image)
-        support = zero_padding_twice(support)
-
-        fft_image = fft2d(image)
-        amplitude = fft_image.abs()
+        image, amplitude, support = super().__getitem__(index)
 
         noise = torch.rand(amplitude.shape) * self.sigma
         amplitude += noise
