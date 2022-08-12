@@ -63,7 +63,10 @@ def run(algorithm, dataloader, args):
                 run_time = time.time() - start_time
                 
                 average_time += run_time
-
+                
+                if torch.isnan(loss):
+                    loss = torch.tensor([100.0]).to(loss.device)
+                
                 if best_recon['loss'] > loss:
                     best_recon.update({'recon': recon, 'loss':loss})
 
