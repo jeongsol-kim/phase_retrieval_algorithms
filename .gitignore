@@ -3,3 +3,4 @@ __pycache__/*
 *.png
 results/*
 *.ipynb
+.pytest_cache
