@@ -5,6 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 import utils
+from initializer import get_initializer
 
 __ALGORITHMS__ = {}
 
@@ -25,7 +26,8 @@ def get_algorithm(name: str) -> Callable:
 def error_reduction_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
     
     # initial guess
-    random_phase = torch.rand(amplitude.shape).to(amplitude.device)
+    init_fn = get_initializer('gaussian')
+    random_phase = init_fn(amplitude.shape).to(amplitude.device)
     G = amplitude * torch.exp(1j * random_phase * 2 * np.pi)
 
     pbar = tqdm(range(iteration), miniters=100)
@@ -47,7 +49,8 @@ def error_reduction_algorithm(amplitude: torch.Tensor, support: torch.Tensor, it
 def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
 
     # initial guess
-    random_phase = torch.rand(amplitude.shape).to(amplitude.device)
+    init_fn = get_initializer('gaussian')
+    random_phase = init_fn(amplitude.shape).to(amplitude.device)
     G = amplitude * torch.exp(1j * random_phase * 2 * np.pi)
     g = torch.real(utils.ifft2d(G))
 
