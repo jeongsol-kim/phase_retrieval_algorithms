@@ -70,8 +70,8 @@ def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor
 # Helper functions
 # =================
 
-def generate_random_phase(padded_amplitude: torch.Tensor, support: torch.Tensor) -> torch.Tensor:
-    random_uniform = torch.rand(padded_amplitude.shape).to(support.device)
+def generate_random_phase(amplitude: torch.Tensor, support: torch.Tensor) -> torch.Tensor:
+    random_uniform = torch.rand(amplitude.shape).to(support.device)
     random_phase = random_uniform * support
     return random_phase
 
