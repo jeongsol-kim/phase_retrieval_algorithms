@@ -23,27 +23,29 @@ def get_initializer(name: str):
 
 @register_initializer(name='gaussian')
 def gaussian_initializer(shape: Tuple[int]) -> torch.Tensor:
-    return torch.rand(shape)
+    return torch.randn(shape)
 
 
 @register_initializer(name='spectral')
-def spectral_initializer(amplitude: torch.Tensor) -> torch.Tensor:
+def spectral_initializer(amplitude: torch.Tensor, power_iteration: int) -> torch.Tensor:
     intensity = amplitude ** 2
 
-    z0 = torch.rand(amplitude.shape)
+    z0 = torch.randn(amplitude.shape).to(amplitude.device)
     z0 = z0 / torch.norm(z0)
-    z0 = power_method_for_spectral_init(z0, 50)
+    
+    z0 = power_method_for_spectral_init(z0, power_iteration)
 
     # scale eigenvector
     z0 *= torch.sqrt(intensity.mean())
+
     return z0
 
 # =================
 # Helper functions
 # =================
 
-def power_method_for_spectral_init(z0: torch.Tensor, intensity: torch.Tensor, iteration: int):
+def power_method_for_spectral_init(z0: torch.Tensor, iteration: int):
     for _ in range(iteration):
-        z0 = utils.ifft2d(intensity * utils.fft2d(z0))
+        z0 = utils.ifft2d(utils.fft2d(z0)) * torch.numel(z0)
         z0 = z0 / torch.norm(z0)
     return z0
