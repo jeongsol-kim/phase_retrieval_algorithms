@@ -66,8 +66,54 @@ def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor
         pbar.set_description(f"Iteration {i+1}", refresh=False)
         pbar.set_postfix({'MSE': loss.item()}, refresh=False)
 
+    g = torch.real(utils.ifft2d(G))
     final_loss = mse_loss(G.abs(), amplitude)
     return g, final_loss
+
+
+@register_algorithm(name="OSS")
+def oversampling_smoothness_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
+    '''https://arxiv.org/ftp/arxiv/papers/1211/1211.4519.pdf'''
+
+    # prepare alpha for gaussian filter (following the paper)
+    n_filters = 10
+    x_alpha = torch.linspace(amplitude.size(-2), 0.05 * amplitude.size(-2), n_filters)
+    y_alpha = torch.linspace(amplitude.size(-1), 0.05 * amplitude.size(-1), n_filters)
+    
+    # initial guess
+    init_fn = get_initializer('gaussian')
+    random_phase = init_fn(amplitude.shape).to(amplitude.device)
+    G = amplitude * torch.exp(1j * random_phase * 2 * np.pi)
+    g = torch.real(utils.ifft2d(G))
+
+    # initial loss for choosing best recon.
+    loss = 1e9
+
+    for i in range(n_filters):
+        best = {'recon': G, 'loss': loss}
+        pbar = tqdm(range(int(iteration/n_filters)), miniters=100)
+        for _ in pbar:
+            G_prime = apply_fourier_constraint(G, amplitude)
+            g_prime = torch.real(utils.ifft2d(G_prime))
+            gaussian_filter = generate_gaussian_filter(amplitude, x_alpha[i], y_alpha[i])
+            g = apply_image_constraint_oss(g_prime, g, support, gaussian_filter)
+            G = utils.fft2d(g)
+
+            loss = mse_loss(G.abs(), amplitude)
+            if torch.isnan(loss):
+                loss = torch.tensor(np.inf)
+            if best.get('loss') > loss:
+                best.update({'recon' : G, 'loss': loss})
+
+            pbar.set_description(f"Iteration {i+1}", refresh=False)
+            pbar.set_postfix({"MSE" : loss.item()})
+
+        G = best.get('recon')
+
+    g = torch.real(utils.ifft2d(G))
+    final_loss = mse_loss(G.abs(), amplitude)
+    return g, final_loss
+
 
 @register_algorithm(name="WF")
 def wirtinger_flow_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
@@ -100,6 +146,20 @@ def wirtinger_flow_algorithm(amplitude: torch.Tensor, support: torch.Tensor, ite
 # Helper functions
 # =================
 
+def generate_gaussian_filter(amplitude: torch.Tensor, x_alpha: float, y_alpha: float):
+    x = torch.arange(-round((amplitude.size(-2) - 1) / 2), round((amplitude.size(-2) -1) / 2), amplitude.size(-2))
+    y = torch.arange(-round((amplitude.size(-1) - 1) / 2), round((amplitude.size(-1) -1) / 2), amplitude.size(-1))
+    X, Y = torch.meshgrid(x, y)
+
+    gaussian_filter = torch.exp(-0.5 * ((X/x_alpha) ** 2)) * torch.exp(-0.5 * ((Y/y_alpha) ** 2))
+
+    # normalize and repeat filter
+    gaussian_filter /= gaussian_filter.max()
+    gaussian_filter = gaussian_filter.expand(amplitude.shape)
+    gaussian_filter = gaussian_filter.to(amplitude.device)
+        
+    return gaussian_filter
+
 def generate_random_phase(amplitude: torch.Tensor, support: torch.Tensor) -> torch.Tensor:
     random_uniform = torch.rand(amplitude.shape).to(support.device)
     random_phase = random_uniform * support
@@ -115,6 +175,16 @@ def apply_image_constraint_hio(obj, prev_obj, support, beta=0.9):
     in_support = obj * support
     out_support = (prev_obj - beta * obj) * (1-support)
     return in_support + out_support
+
+
+def apply_image_constraint_oss(obj, prev_obj, support, gaussian_filter):
+    new_obj = apply_image_constraint_hio(obj, prev_obj, support)
+    
+    # for oss conditioning, don't use non-negative constraint.
+    in_support = new_obj * support
+    out_support = torch.real(utils.ifft2d(utils.fft2d(new_obj) * gaussian_filter)) * (1-support)
+    return in_support + out_support
+
 
 def generate_non_negative_support(obj: torch.Tensor) -> torch.Tensor:
     nn_support = torch.ones_like(obj)
