@@ -76,9 +76,9 @@ def oversampling_smoothness_algorithm(amplitude: torch.Tensor, support: torch.Te
     '''https://arxiv.org/ftp/arxiv/papers/1211/1211.4519.pdf'''
 
     # prepare alpha for gaussian filter (following the paper)
-    n_filters = 10
-    x_alpha = torch.linspace(amplitude.size(-2), 0.05 * amplitude.size(-2), n_filters)
-    y_alpha = torch.linspace(amplitude.size(-1), 0.05 * amplitude.size(-1), n_filters)
+    n_filters = int(iteration/200)
+    x_alpha = torch.linspace(2*amplitude.size(-2), 0.2 * amplitude.size(-2), n_filters)
+    y_alpha = torch.linspace(2*amplitude.size(-1), 0.2 * amplitude.size(-1), n_filters)
     
     # initial guess
     init_fn = get_initializer('gaussian')

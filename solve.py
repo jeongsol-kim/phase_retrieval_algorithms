@@ -61,26 +61,19 @@ def run(algorithm, dataloader, args):
             recon, loss = algorithm(amplitude, support, args.num_iterations)
             run_time = time.time() - start_time
             
-            for n in range(args.num_repeats):
-                logger.info("Repeat Time %d.", n+1)
-
-                start_time = time.time()
-                recon, loss = algorithm(amplitude, support, args.num_iterations)
-                run_time = time.time() - start_time
+            average_time += run_time
                 
-                average_time += run_time
+            if torch.isnan(loss):
+                loss = torch.tensor([np.inf]).to(loss.device)
                 
-                if torch.isnan(loss):
-                    loss = torch.tensor([np.inf]).to(loss.device)
-                
-                if best_recon['loss'] > loss:
-                    best_recon.update({'recon': recon, 'loss':loss})
+            if best_recon['loss'] > loss:
+                best_recon.update({'recon': recon, 'loss':loss})
 
-            average_time = average_time / args.num_repeats
-            logger.info(f"Best loss: {round(best_recon['loss'].item(), 3)}")
-            logger.info(f"Average time: {average_time}")
+        average_time = average_time / args.num_repeats
+        logger.info(f"Best loss: {round(best_recon['loss'].item(), 3)}")
+        logger.info(f"Average time: {average_time}")
 
-            recon = crop_center_half(best_recon['recon'])
+        recon = crop_center_half(best_recon['recon'])
 
         measurement_image = torch.real(crop_center_half(ifft2d(amplitude)))
         save_image(normalize(recon), os.path.join(save_dir, f"recon/recon_{i}.png"))
