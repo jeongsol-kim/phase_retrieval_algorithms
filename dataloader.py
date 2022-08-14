@@ -54,6 +54,15 @@ class PNGDataset(VisionDataset):
 
         return image
 
+@register_dataset(name='amplitude_no_pad_dataset')
+class AmplitudeNoPadDataset(PNGDataset):
+    def __getitem__(self, index):
+        image = super().__getitem__(index)
+        fft_image = fft2d(image)
+        amplitude = fft_image.abs()
+        return image, amplitude, image
+
+
 @register_dataset(name='amplitude_dataset')
 class AmplitudeDataset(PNGDataset):
     def __getitem__(self, index):
@@ -77,7 +86,7 @@ class NoiseAmplitudeDataset(AmplitudeDataset):
     def __getitem__(self, index):
         image, amplitude, support = super().__getitem__(index)
 
-        noise = torch.rand(amplitude.shape) * self.sigma
+        noise = torch.randn(amplitude.shape) * self.sigma
         amplitude += noise
 
         return image, amplitude, support
