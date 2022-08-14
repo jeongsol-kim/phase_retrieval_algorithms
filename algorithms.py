@@ -69,6 +69,33 @@ def hybrid_input_output_algorithm(amplitude: torch.Tensor, support: torch.Tensor
     final_loss = mse_loss(G.abs(), amplitude)
     return g, final_loss
 
+@register_algorithm(name="WF")
+def wirtinger_flow_algorithm(amplitude: torch.Tensor, support: torch.Tensor, iteration: int):
+
+    # initialize step size schedule
+    tau0 = 330
+    mu_max = 0.4
+    mu = [min(1-np.exp(-t/tau0), mu_max) for t in range(1, iteration+1)]
+
+    # initial guess
+    init_fn = get_initializer('spectral')
+    z = init_fn(amplitude, power_iteration=500)
+
+    pbar = tqdm(range(iteration), miniters=100)
+    for i in pbar:
+        estimate = utils.fft2d(z)
+        temp = (estimate.abs() ** 2 - amplitude ** 2) * estimate
+        grad = utils.ifft2d(temp) / torch.numel(temp)
+
+        z = z - mu[i] / (amplitude ** 2).mean() * grad
+        
+        loss = mse_loss(utils.fft2d(z).abs(), amplitude)
+        pbar.set_description(f"Iteration {i+1}", refresh=False)
+        pbar.set_postfix({'MSE': loss.item()}, refresh=False)
+
+    final_loss = mse_loss(utils.fft2d(z).abs(), amplitude)
+    return z.abs(), final_loss
+
 # =================
 # Helper functions
 # =================
