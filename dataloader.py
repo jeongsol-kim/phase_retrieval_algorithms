@@ -40,7 +40,7 @@ class PNGDataset(VisionDataset):
         super().__init__(root=root)
         self.transform = transform
         stage = "train" if train else "valid"
-        self.image_paths = glob(os.path.join(root, stage, '*.png'))
+        self.image_paths = sorted(glob(os.path.join(root, stage, '*.png')))
 
     def __len__(self):
         return len(self.image_paths)
