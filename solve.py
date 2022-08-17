@@ -5,6 +5,7 @@ import time
 import argparse
 import torch
 from torchvision.utils import save_image
+import numpy as np
 
 from dataloader import get_valid_loader
 from algorithms import get_algorithm
@@ -64,13 +65,16 @@ def run(algorithm, dataloader, args):
             average_time += run_time
                 
             if torch.isnan(loss):
-                loss = torch.tensor([np.inf]).to(loss.device)
+                loss = torch.tensor([1e5]).to(loss.device)
                 
             if best_recon['loss'] > loss:
                 best_recon.update({'recon': recon, 'loss':loss})
 
         average_time = average_time / args.num_repeats
-        logger.info(f"Best loss: {round(best_recon['loss'].item(), 3)}")
+        try:
+            logger.info(f"Best loss: {round(best_recon['loss'].item(), 3)}")
+        except:
+            logger.info(f"Best loss: {best_recon['loss']}")
         logger.info(f"Average time: {average_time}")
 
         recon = crop_center_half(best_recon['recon'])
@@ -99,7 +103,7 @@ def main():
     algorithm = get_algorithm(args.algorithm)
 
     with torch.no_grad():
-        run(algorithm, loader, args)   
+        run(algorithm, loader, args)
 
 if __name__ == "__main__":
     main()
