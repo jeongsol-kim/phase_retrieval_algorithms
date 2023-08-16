@@ -12,6 +12,10 @@ Currently, Error reduction & Hybrid input-output algorithms are implemented.
 
 ## Usage
 
+```
+python solve.py
+```
+
 ### Required argument
 
 ```
